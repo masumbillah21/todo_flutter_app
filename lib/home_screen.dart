@@ -10,6 +10,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _formKey = GlobalKey<FormState>();
   final List<String> _options = ['Pending', 'Completed'];
   final List<Todo> _todos = [];
   String _optionValue = '';
@@ -34,89 +35,90 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: MediaQuery.of(context).viewInsets,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    index == -1 ? "Add New Todo" : "Update Todo",
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.red,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      index == -1 ? "Add New Todo" : "Update Todo",
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.red,
+                      ),
+                    )
+                  ],
+                ),
+                TextFormField(
+                  controller: _todoEditField,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: "Write your todo here...",
+                    errorBorder: OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return "Add your todo...";
+                    }
+                    return null;
+                  },
+                ),
+                if (index != -1) ...[
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  DropdownMenu<String>(
+                    width: MediaQuery.sizeOf(context).width,
+                    initialSelection: _todos[index].status,
+                    onSelected: (String? value) {
+                      setState(() {
+                        _optionValue = value!;
+                      });
+                    },
+                    dropdownMenuEntries:
+                        _options.map<DropdownMenuEntry<String>>((String value) {
+                      return DropdownMenuEntry<String>(
+                        value: value,
+                        label: value,
+                        style: ButtonStyle(
+                          textStyle: MaterialStateTextStyle.resolveWith(
+                            (states) => const TextStyle(fontSize: 15),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   )
                 ],
-              ),
-              TextFormField(
-                controller: _todoEditField,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: "Write your todo here...",
-                  enabledBorder: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Add your todo...";
-                  }
-                  return null;
-                },
-              ),
-              if (index != -1) ...[
-                const SizedBox(
-                  height: 10,
-                ),
-                DropdownMenu<String>(
-                  width: MediaQuery.sizeOf(context).width,
-                  initialSelection: _todos[index].status,
-                  onSelected: (String? value) {
-                    setState(() {
-                      _optionValue = value!;
-                    });
-                  },
-                  dropdownMenuEntries:
-                      _options.map<DropdownMenuEntry<String>>((String value) {
-                    return DropdownMenuEntry<String>(
-                      value: value,
-                      label: value,
-                      style: ButtonStyle(
-                        textStyle: MaterialStateTextStyle.resolveWith(
-                          (states) => const TextStyle(fontSize: 15),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (index == -1) {
+                        _addTodo();
+                      } else {
+                        _updateTodo(index);
+                      }
+                    },
+                    child: Text(
+                      index == -1 ? "Add" : "Update",
+                    ),
+                  ),
                 )
               ],
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (index == -1) {
-                      _addTodo();
-                      _todoEditField.text = "";
-                      Navigator.pop(context);
-                    } else {
-                      _updateTodo(index);
-                      _todoEditField.text = "";
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text(
-                    index == -1 ? "Add" : "Update",
-                  ),
-                ),
-              )
-            ],
+            ),
           ),
         ),
       ),
@@ -158,19 +160,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addTodo() {
-    _todos.add(Todo(
-      title: _todoEditField.text,
-      date: DateTime.now(),
-    ));
-    setState(() {});
+    if (_formKey.currentState!.validate()) {
+      _todos.add(Todo(
+        title: _todoEditField.text,
+        date: DateTime.now(),
+      ));
+      setState(() {});
+      Navigator.pop(context);
+      _todoEditField.text = '';
+    }
   }
 
   void _updateTodo(int index) {
-    _todos[index].title = _todoEditField.text;
-    _todos[index].status =
-        _optionValue.isEmpty ? _todos[index].status : _optionValue;
-    setState(() {});
-    _optionValue = "";
+    if (_formKey.currentState!.validate()) {
+      _todos[index].title = _todoEditField.text;
+      _todos[index].status =
+          _optionValue.isEmpty ? _todos[index].status : _optionValue;
+      setState(() {});
+
+      Navigator.pop(context);
+      _optionValue = "";
+      _todoEditField.text = '';
+    }
   }
 
   void _deleteTodo(int index) {

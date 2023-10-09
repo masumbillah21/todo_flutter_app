@@ -4,4 +4,4 @@ A Simple Todo Flutter (Android/iOS) App.
 
 
 # Screenshots
-![todo.gif](screenshots%2Ftodo.gif)
+![todo_updated.gif](screenshots%2Ftodo_updated.gif)
