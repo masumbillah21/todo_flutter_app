@@ -18,8 +18,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showBottomModal({required context, index = -1}) {
     if (index != -1) {
       _todoEditField.text = _todos[index].title;
+    } else {
+      _todoEditField.text = "";
     }
     showModalBottomSheet(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(10),
+          topRight: Radius.circular(10),
+        ),
+      ),
       isScrollControlled: true,
       context: context,
       builder: (context) => Padding(
@@ -68,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 10,
                 ),
                 DropdownMenu<String>(
+                  width: MediaQuery.sizeOf(context).width,
                   initialSelection: _todos[index].status,
                   onSelected: (String? value) {
                     setState(() {
@@ -93,11 +102,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (index == -1) {
-                      addTodo();
+                      _addTodo();
                       _todoEditField.text = "";
                       Navigator.pop(context);
                     } else {
-                      updateTodo(index);
+                      _updateTodo(index);
                       _todoEditField.text = "";
                       Navigator.pop(context);
                     }
@@ -136,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               onTap: () {
-                deleteTodo(index);
+                _deleteTodo(index);
                 Navigator.pop(context);
               },
               leading: const Icon(Icons.delete),
@@ -148,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void addTodo() {
+  void _addTodo() {
     _todos.add(Todo(
       title: _todoEditField.text,
       date: DateTime.now(),
@@ -156,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
-  void updateTodo(int index) {
+  void _updateTodo(int index) {
     _todos[index].title = _todoEditField.text;
     _todos[index].status =
         _optionValue.isEmpty ? _todos[index].status : _optionValue;
@@ -164,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _optionValue = "";
   }
 
-  void deleteTodo(int index) {
+  void _deleteTodo(int index) {
     _todos.removeAt(index);
     setState(() {});
   }
@@ -201,7 +210,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   subtitle: Text(
                     DateFormat("dd-MM-yyyy h:m:s a").format(_todos[index].date),
                   ),
-                  trailing: Text(_todos[index].status),
+                  trailing: Text(
+                    _todos[index].status,
+                    style: TextStyle(
+                      color: _todos[index].status == _options[0]
+                          ? Colors.red
+                          : Colors.green,
+                    ),
+                  ),
                 ),
               ),
               // separatorBuilder: (context, index) => const Divider(
